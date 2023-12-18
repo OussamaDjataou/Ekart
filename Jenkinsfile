@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools{
-        jdk  'jdk11'
+        jdk  'jdk17'
         maven  'maven3'
     }
     
@@ -28,7 +28,7 @@ pipeline {
         
         stage('Sonarqube') {
             steps {
-                withSonarQubeEnv('sonar-server'){
+                withSonarQubeEnv('sonar'){
                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Shopping-Cart \
                    -Dsonar.java.binaries=. \
                    -Dsonar.projectKey=Shopping-Cart '''
