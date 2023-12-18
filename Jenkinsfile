@@ -1,4 +1,3 @@
-@Library('library')_
 pipeline {
     agent any
     tools{
@@ -13,21 +12,17 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                GitCheckoutStage(branchName: 'main', credentialsId: '15fb69c3-3460-4d51-bd07-2b0545fa5151', repositoryUrl: 'https://github.com/jaiswaladi246/Shopping-Cart.git')
+                git branch: 'main', changelog: false, credentialsId: '15fb69c3-3460-4d51-bd07-2b0545fa5151', poll: false, url: 'https://github.com/jaiswaladi246/Shopping-Cart.git'
             }
         }
-        
-        
-        stage('COMPILE') {
+        stage('Test') {
             steps {
-                sh "mvn clean compile -DskipTests=true"
+                sh "mvn test"
             }
         }
-        
-        stage('OWASP Scan') {
+        stage('Integration Test') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ ', odcInstallation: 'DP'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                sh "mvn verify -DskipTests=true"
             }
         }
         
@@ -41,6 +36,15 @@ pipeline {
             }
         }
         
+        stage('OWASP Scan') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ ', odcInstallation: 'DP'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        
+        
+        
         stage('Build') {
             steps {
                 sh "mvn clean package -DskipTests=true"
@@ -50,11 +54,11 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script{
-                    withDockerRegistry(credentialsId: '2fe19d8a-3d12-4b82-ba20-9d22e6bf1672', toolName: 'docker') {
+                    withDockerRegistry(credentialsId: 'docker_id', url: 'https://hub.docker.com/repository/docker/djataououssama/testjenkins/general') {
                         
                         sh "docker build -t shopping-cart -f docker/Dockerfile ."
-                        sh "docker tag  shopping-cart adijaiswal/shopping-cart:latest"
-                        sh "docker push adijaiswal/shopping-cart:latest"
+                        sh "docker tag  shopping-cart djataououssama/testjenkins:latest"
+                        sh "docker push djataououssama/testjenkins:latest"
                     }
                 }
             }
